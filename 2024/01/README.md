@@ -7,4 +7,7 @@ Run:
 cat input.dat | go run main.go
 ```
 
-My answer: __1189304__
+Total distance: __1189304__
+
+Similarity score: __24349736__
+
