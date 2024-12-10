@@ -7,4 +7,4 @@ Run:
 cat input.dat | go run main.go
 ```
 
-Safe reports: __524__
+Safe reports: __569__

@@ -34,10 +34,8 @@ func LoadData(r io.Reader) (reports [][]int, err error) {
 			report = append(report, levelInt)
 		}
 
-		if CheckReportValidity(report) {
+		if CheckReportValidity(report, 1) {
 			reports = append(reports, report)
-		} else {
-			fmt.Printf("Level %+v is unsafe\n", levels)
 		}
 	}
 	if scanner.Err() != nil {
@@ -47,41 +45,61 @@ func LoadData(r io.Reader) (reports [][]int, err error) {
 	return reports, nil
 }
 
-func CheckReportValidity(report []int) bool {
+// CheckReportValidity can remove single level (system tolerate a single bad level)
+func CheckReportValidity(report []int, possibleFaults int) bool {
 	cLevels := len(report)
 	if cLevels < 2 {
 		return true
 	}
 
+	trend := 0
+	diffs := make([]int, 0)
 	for i := cLevels - 1; i >= 1; i-- {
-		diffLastTwo := report[i] - report[i-1]
-
-		// it should either gradually increasing or gradually decreasing
-		if diffLastTwo == 0 {
-			fmt.Println("diffLastTwo == 0")
-			return false
-		}
-		if diffLastTwo < 0 && diffLastTwo < -3 || diffLastTwo > 0 && diffLastTwo > 3 {
-			fmt.Println("diffLastTwo > 3", diffLastTwo, report)
-			return false
-		}
-
-		// no need to check order for last levels
-		if i == 1 {
-			return true
-		}
-
-		// check if either decreasing or increasing order
-		diffPrevious := report[i-1] - report[i-2]
-		if diffLastTwo > 0 && diffPrevious < 0 ||
-			diffLastTwo < 0 && diffPrevious > 0 {
-
-			fmt.Println("diffLastTwo != diffPrevious", diffLastTwo, diffPrevious)
-			return false
+		diff := report[i] - report[i-1]
+		diffs = append([]int{diff}, diffs...)
+		if diff < 0 {
+			trend -= 1
+		} else if diff > 0 {
+			trend += 1
 		}
 	}
 
-	return true
+	invalidLevels := make([]int, 0)
+	for i, diff := range diffs {
+		if (trend > 0 && diff >= 1 && diff <= 3) ||
+			(trend < 0 && diff <= -1 && diff >= -3) {
+			continue
+		}
+		invalidLevels = append(invalidLevels, i+1)
+	}
+	if len(invalidLevels) == 0 {
+		return true
+	}
+
+	// cannot be more than possible faults (+1 is because adjucents may affect each other)
+	if len(invalidLevels) > possibleFaults+1 {
+		return false
+	}
+
+	for _, l := range invalidLevels {
+		reportCopy := append([]int{}, report[:l]...)
+		if CheckReportValidity(append(reportCopy, report[l+1:]...), -1) {
+			return true
+		}
+		reportCopy = append([]int{}, report[:l-1]...)
+		if CheckReportValidity(append(reportCopy, report[l:]...), -1) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
 }
 
 func noError(err error) {
