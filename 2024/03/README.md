@@ -7,4 +7,4 @@ Run:
 cat input.dat | go run main.go
 ```
 
-Puzzle answer: __192767529__
+Puzzle answer: __104083373__
