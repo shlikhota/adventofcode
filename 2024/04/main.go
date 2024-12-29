@@ -8,13 +8,14 @@ import (
 )
 
 func main() {
-	count := LookUp(os.Stdin, []byte("XMAS"))
+	count := LookUp(os.Stdin, []byte("MAS"))
 	fmt.Println("Puzzle answer:", count)
 }
 
-const Left = 0
+// const Left = 0
 const TopLeft = 1
-const Top = 2
+
+// const Top = 2
 const TopRight = 3
 
 func LookUp(input io.Reader, needle []byte) (result int) {
@@ -25,7 +26,6 @@ func LookUp(input io.Reader, needle []byte) (result int) {
 	var previousRowStates [][4]int
 
 	sc := bufio.NewScanner(input)
-	var irow int
 	var previousIndex int
 
 	for sc.Scan() {
@@ -39,17 +39,13 @@ func LookUp(input io.Reader, needle []byte) (result int) {
 		for col := 0; col < rowLength; col++ {
 			currentByte := row[col]
 
-			// check horizontal orientation
+			// check diagonal orientation (right to left)
 			previousIndex = 0
-			if col > 0 {
-				previousIndex = currentRowStates[col-1][Left]
+			if col < rowLength-1 {
+				previousIndex = previousRowStates[col+1][TopRight]
 			}
-			leftIndex, found := getNextIndex(needle, currentByte, previousIndex)
-			currentRowStates[col][Left] = leftIndex
-			if found {
-				result++
-				fmt.Printf("horizontal\t(%d)\t[%2d,%2d]\n", result, irow, col)
-			}
+			topRightIndex, _ := getNextIndex(needle, currentByte, previousIndex)
+			currentRowStates[col][TopRight] = topRightIndex
 
 			// check diagonal orientation (left to right)
 			previousIndex = 0
@@ -58,32 +54,10 @@ func LookUp(input io.Reader, needle []byte) (result int) {
 			}
 			topLeftIndex, found := getNextIndex(needle, currentByte, previousIndex)
 			currentRowStates[col][TopLeft] = topLeftIndex
-			if found {
-				result++
-				fmt.Printf("diagonal(l)\t(%d)\t[%2d,%2d]\n", result, irow, col)
-			}
 
-			// check vertical orientation
-			previousIndex = previousRowStates[col][Top]
-			topIndex, found := getNextIndex(needle, currentByte, previousIndex)
-			currentRowStates[col][Top] = topIndex
-			if found {
+			if found && col >= 2 && abs(currentRowStates[col][TopLeft]) == abs(currentRowStates[col-2][TopRight]) {
 				result++
-				fmt.Printf("vertical\t(%d)\t[%2d,%2d]\n", result, irow, col)
 			}
-
-			// check diagonal orientation (right to left)
-			previousIndex = 0
-			if col < rowLength-1 {
-				previousIndex = previousRowStates[col+1][TopRight]
-			}
-			topRightIndex, found := getNextIndex(needle, currentByte, previousIndex)
-			currentRowStates[col][TopRight] = topRightIndex
-			if found {
-				result++
-				fmt.Printf("diagonal(r)\t(%d)\t[%2d,%2d]\n", result, irow, col)
-			}
-			irow++
 		}
 
 		previousRowStates = currentRowStates

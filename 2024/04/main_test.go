@@ -18,8 +18,8 @@ SMSMSASXSS
 SAXAMASAAA
 MAMMMXMMMM
 MXMXAXMASX`)
-	got := main.LookUp(bytes.NewReader(rawInput), []byte("XMAS"))
-	expected := 18
+	got := main.LookUp(bytes.NewReader(rawInput), []byte("MAS"))
+	expected := 9
 	if got != expected {
 		t.Errorf("Expected %d XMAS, but got %d", expected, got)
 	}
